@@ -1,9 +1,15 @@
-public with sharing class BatchAssignTaskToAppropriateAccount {
-    public BatchAssignTaskToAppropriateAccount() {
-            //Selector
-            //methode de Batch
+global class BatchAssignTaskToAppropriateAccount implements Database.Batchable<sObject>{
+    
+    global Database.QueryLocator start(Database.BatchableContext info){
+        //affiner la selction des accounts pour ne prendre que les accounts depuis le dernier premier lundi du mois
+        //faire une selection des accounts sans order ? et ou selection des accounts sans tâches ... comment faire
+        return Database.QueryLocator('SELECT Id FROM Account');
     }
 
+    global void execute(Database.BatchableContext info, List<Account>scope){
+        BatchAssignTaskToAppropriateAccount.addTaskToAccounts(scope);
+    }
+    //possibilité de créer une classe de service pour mettre cette méthode
     public static void addTaskToAccounts(List<Account> accList) {
         List<Task> tskList = new List<Task>();
         for(Account a : accList) {

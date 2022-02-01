@@ -19,7 +19,8 @@ public with sharing class DataFactory {
             Order orderToAdd = new Order(
             AccountId = a.Id,
             EffectiveDate = Date.today() +7,
-            Pricebook2Id = PricebookId);
+            Pricebook2Id = PricebookId,
+            Status ='Draft');
             orders.add(orderToAdd);
         }
         insert orders;

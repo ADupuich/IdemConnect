@@ -20,8 +20,8 @@ private class OrderTriggerHandlerTest {
         List<Order> orderToDelete = new List<Order>();
         orderToDelete = [SELECT Id FROM Order LIMIT 11];
         //We are going to add one order on specific account here. We want to be sure that the trigger don't uncheck box when one order left on the account
-        Order orderToTagetAccount = orderToDelete.get(0);
-        Id accountTargetedId = orderToTagetAccount.AccountId;
+        Order orderToTargetAccount = orderToDelete.get(0);
+        Id accountTargetedId = orderToTargetAccount.AccountId;
         DataFactory.oneOrder(accountTargetedId);
         //The order has been added now. We have 11 orders that we are going to delete
         for (Order o : orderToDelete) {
@@ -41,7 +41,7 @@ private class OrderTriggerHandlerTest {
         System.assert(orderAddedBeforeDelete.size() == 1, 'TRIGGER AFTER DELETE : We do not find the correct number of order on the 2 orders account. There is '+orderAddedBeforeDelete.size()+' orders.');
     }
     @Istest
-    private static void nameorderTriggerHandlerBeforeUpdate() {
+    private static void orderTriggerHandlerBeforeUpdate() {
         Product2 testProduct = new Product2(Name = 'produit test', Family = 'Testeur');
         insert testProduct;
         List<Product2> productForTest = new List<Product2>();
@@ -50,7 +50,7 @@ private class OrderTriggerHandlerTest {
         Id idProductForTest = firstProduct.Id;
         List<Order> orderToAddItem = new List<Order>();
         //We choose 24 orders because we want that one order left with order but without product to check if the trigger stuck it
-        orderToAddItem = [SELECT Id FROM Order LIMIT 24];
+        orderToAddItem = [SELECT Id FROM Order];
         for (Order o : orderToAddItem) {
             OrderItem oi = new OrderItem(
                 OrderId = o.Id,
@@ -62,7 +62,7 @@ private class OrderTriggerHandlerTest {
         List<Order> orderChangingStatus = new List<Order>();
         orderChangingStatus = [SELECT Id, Status FROM Order];
         for (order o : orderChangingStatus) {
-            o.Status = 'Activated';
+            o.Status = 'Actif';
             update o;
         }
         Test.stopTest();
