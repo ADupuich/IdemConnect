@@ -19,6 +19,7 @@
         //What the other accounts the method won't selecting ? An account with order
         //We are going to take 25 accounts that doon't have task
         ListToAddOrder = new List<Account>();
+        //offset mot clé !! <3
         accountsToAddOrder = [SELECT Id FROM Account WHERE Id !=: accountToAddTask.Id LIMIT 25];
         //be sure the program selected 25 accounts
         System.debug(accountToAddOrder.size());
@@ -37,7 +38,8 @@
         accountsList = [SELECT Id FROM Account];
         Integer accountsListSize = accountsList.size();
         Integer accountToAddOrderSize = accountToAddOrder.size();
-        System.assert(0 == accountsListSize - accountToAddOrderSize + tasksListSize, 'The number of accounts does not match with the account with task + order, the difference equal to'+accountsListSize - accountToAddOrderSize + tasksListSize);
+        //requeter pour une account avec task = 175
+        System.assert(0 == accountsListSize - (accountToAddOrderSize + tasksListSize), 'The number of accounts does not match with the account with task + order, the difference equal to'+accountsListSize - accountToAddOrderSize + tasksListSize);
         //J'aurai peut-être besoin d'une condition particulière pour contourner le soucis de date (premier lundi du mois) du batch
         }
     }
