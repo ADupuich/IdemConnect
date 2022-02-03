@@ -2,7 +2,7 @@
 private class OrderTriggerHandlerTest {
     @TestSetup
     static void makeData(){
-        Integer nAccount = 25;
+        Integer nAccount = 2;
         DataFactory.createAccount(nAccount);
         //Add the value true to active checkbox
         List<Account> accountForTestTriggerHandler = new List<Account>();
@@ -42,20 +42,12 @@ private class OrderTriggerHandlerTest {
     }
     @Istest
     private static void orderTriggerHandlerBeforeUpdate() {
-        Product2 testProduct = new Product2(Name = 'produit test', Family = 'Testeur');
-        insert testProduct;
-        List<Product2> productForTest = new List<Product2>();
-        productForTest = [SELECT Id FROM Product2];
-        Product2 firstProduct = productForTest.get(0);
-        Id idProductForTest = firstProduct.Id;
-        List<Order> orderToAddItem = new List<Order>();
+        Product2 testProduct = DataFactory.createProduct();
+        List<Order> orderToAddItem = new List<Order>([SELECT Id, Pricebook2Id FROM Order LIMIT 1]);
         //We choose 24 orders because we want that one order left with order but without product to check if the trigger stuck it
-        orderToAddItem = [SELECT Id FROM Order];
         for (Order o : orderToAddItem) {
-            OrderItem oi = new OrderItem(
-                OrderId = o.Id,
-                Product2Id = idProductForTest,
-                Quantity = 1);
+            PricebookEntry Price = DataFactory.createPricebookEntry(o, testProduct);
+            OrderItem orderItem = DataFactory.createOrderItem(o, testProduct, Price);
         }
         Test.startTest();
         //Select all our 25 orders and try to put there status in activated
@@ -63,13 +55,17 @@ private class OrderTriggerHandlerTest {
         orderChangingStatus = [SELECT Id, Status FROM Order];
         for (order o : orderChangingStatus) {
             o.Status = 'Actif';
-            update o;
+            try{
+                update o;
+            } catch (Exception e){
+                system.debug('exception : ' + e.getMessage()); 
+            }
         }
         Test.stopTest();
         //If the trigger made the job we should find one order here
         List<Order> orderWithDraftStatus = new List<Order>();
         orderWithDraftStatus = [SELECT Id FROM Order WHERE Status = 'Draft'];
-        System.assert(orderWithDraftStatus.size() == 1, 'TRIGGER BEFORE UPDATE : There is not the good number of drafted order, there is '+orderWithDraftStatus.size()+' order');
+        System.assert(orderWithDraftStatus.size() == 1, 'TRIGGER BEFORE UPDATE : There is not the good number of drafted order, there is '+orderWithDraftStatus.size()+' order with Draft status');
         System.assert(orderWithDraftStatus.size() > 0, 'TRIGGER BEFORE UPDATE : There should be one or more orders with Draft Status');
     }
 }
