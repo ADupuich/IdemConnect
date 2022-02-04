@@ -2,7 +2,7 @@
 private class OrderTriggerHandlerTest {
     @TestSetup
     static void makeData(){
-        Integer nAccount = 2;
+        Integer nAccount = 3;
         DataFactory.createAccount(nAccount);
         //Add the value true to active checkbox
         List<Account> accountForTestTriggerHandler = new List<Account>();
@@ -17,8 +17,8 @@ private class OrderTriggerHandlerTest {
     @Istest
     private static void orderTriggerHandlerAfterDeleteTest() {
         Test.startTest();
-        List<Order> orderToDelete = new List<Order>();
-        orderToDelete = [SELECT Id FROM Order LIMIT 11];
+        //For successfull test you need to make the LIMIT = nAccount of @TestSetup - 1
+        List<Order> orderToDelete = new List<Order>([SELECT Id,AccountId FROM Order LIMIT 2]);
         //We are going to add one order on specific account here. We want to be sure that the trigger don't uncheck box when one order left on the account
         Order orderToTargetAccount = orderToDelete.get(0);
         Id accountTargetedId = orderToTargetAccount.AccountId;
@@ -30,27 +30,27 @@ private class OrderTriggerHandlerTest {
         Test.stopTest();
         //We are going to verify if we have some account with Active__c is false. We are expecting to find 10 accounts. I know we deleted 11 but on one account we added 1 order. 
         //So one order left on ths account and his checkbox must stay true
-        List<Account> accountWithActiveFalse = new List<Account>();
-        accountWithActiveFalse = [SELECT Id FROM Account WHERE Active__c = FALSE];
+        List<Account> accountWithActiveFalse = new List<Account>([SELECT Id FROM Account WHERE Active__c = FALSE]);
         System.assert(accountWithActiveFalse.size() > 0, 'TRIGGER AFTER DELETE : There is no account with Active uncheck');
-        System.assert(accountWithActiveFalse.size() == 10, 'TRIGGER AFTER DELETE : The number with active uncheck is wrong, there is '+accountWithActiveFalse.size()+' accounts');
+        System.assert(accountWithActiveFalse.size() == 1, 'TRIGGER AFTER DELETE : The number with active uncheck is wrong, there is '+accountWithActiveFalse.size()+' accounts');
         //To be sure check that we can find an order with the previous selected accountID
-        List<Order> orderAddedBeforeDelete = new List<Order>();
-        orderAddedBeforeDelete = [SELECT Id FROM Order WHERE AccountId =: accountTargetedId];
+        List<Order> orderAddedBeforeDelete = new List<Order>([SELECT Id FROM Order WHERE AccountId =: accountTargetedId]);
         System.assert(orderAddedBeforeDelete.size() > 0, 'TRIGGER AFTER DELETE : There is no order with the 2 orders on the selected accountId');
         System.assert(orderAddedBeforeDelete.size() == 1, 'TRIGGER AFTER DELETE : We do not find the correct number of order on the 2 orders account. There is '+orderAddedBeforeDelete.size()+' orders.');
     }
     @Istest
     private static void orderTriggerHandlerBeforeUpdate() {
         Product2 testProduct = DataFactory.createProduct();
-        List<Order> orderToAddItem = new List<Order>([SELECT Id, Pricebook2Id FROM Order LIMIT 1]);
-        //We choose 24 orders because we want that one order left with order but without product to check if the trigger stuck it
+        //We choose the LIMIT equal to orders create in @TestSetup - 1 because we want that one order left with order but without product to check if the trigger stuck it
+        List<Order> orderToAddItem = new List<Order>([SELECT Id, Pricebook2Id FROM Order LIMIT 2]);
+        Order ordForPriceBookId = new Order();
+        ordForPriceBookId = orderToAddItem.get(0);
+        PricebookEntry Price = DataFactory.createPricebookEntry(ordForPriceBookId, testProduct);
         for (Order o : orderToAddItem) {
-            PricebookEntry Price = DataFactory.createPricebookEntry(o, testProduct);
             OrderItem orderItem = DataFactory.createOrderItem(o, testProduct, Price);
         }
         Test.startTest();
-        //Select all our 25 orders and try to put there status in activated
+        //Select all our orders and try to put there status in activated
         List<Order> orderChangingStatus = new List<Order>();
         orderChangingStatus = [SELECT Id, Status FROM Order];
         for (order o : orderChangingStatus) {

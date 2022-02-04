@@ -1,11 +1,5 @@
 public with sharing class OrderTriggerHandler {
-    Order orderToWorkWith = new Order();
-    public OrderTriggerHandler() {
-        //sans doute avoir besoin d'un if ou try à cause du blovage généré par le trigger
-        //attention trigger sur status Activated
-        //si product alors update
-        //sinon ne rien faire ou un print scrin pour voir l'erreur
-    }
+
     public static void doNotUpdateStatusWithoutOrderItem(List<Order> orderToWorkWith) {
         //Vérifier que les order ont des orderItem
         //Dans un premier temps aller chercher les orderItem et leur OrderId dont l'order à déclencher le trigger
@@ -23,16 +17,28 @@ public with sharing class OrderTriggerHandler {
             }
         }
     }
-    public static void uncheckActiveOnAccount(Order orderToWorkWith) {
-        //si la dernière order d'un compte est supprimé alors la case active de l'account en question et décoché
-        List<Order> orderRelated = new List<Order>();
-        orderRelated = [SELECT Id, Account.Active__c FROM order WHERE AccountId =: orderToWorkWith.AccountId];
-        if (!orderRelated.isEmpty()) {
-            //refaire le travail sur account
-            Order orderWeNeed = orderRelated.get(0);
-            orderWeNeed.Account.Active__c = false;
-            update orderWeNeed;
+    public static void uncheckActiveOnAccount(List<Order> orderToWorkWith) {
+        //Firstly I want to know wich Account are triggering
+        List<Id> relatedAccountId = new List<Id>();
+        for (order o : orderToWorkWith) {
+            relatedAccountId.add(o.AccountId);
         }
-
+        //And put them in List of Account involved in trigger
+        List<Account> relatedAccount = new List<Account>([SELECT Id, Active__c FROM Account WHERE ID IN :relatedAccountId]);
+        //Now I need to request if there other orders on this account
+        List<Order> orderOnRelatedAccount = new List<Order>([SELECT Id, AccountId FROM Order WHERE AccountId IN :relatedAccountId]);
+        //And I put them in a map to use containskey method after
+        Map<Id,Account> accountWithOrder = new Map<Id,Account>();
+        for (Order o : orderOnRelatedAccount) {
+            Account accToAddInMap = new Account();
+            accountWithOrder.put(o.AccountId, accToAddInMap);
+        }
+        //Here I can compare accounts triggered and accounts triggered with order
+        for (Account acc : relatedAccount) {
+            if (!accountWithOrder.containsKey(acc.Id)) {
+                acc.Active__c = false;
+                update relatedAccount;
+            }
+        }
     }
 }

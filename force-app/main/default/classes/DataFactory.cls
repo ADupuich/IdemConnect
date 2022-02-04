@@ -31,7 +31,8 @@ public with sharing class DataFactory {
         Order order = new Order(
             AccountId = accountId,
             EffectiveDate = Date.today() +7,
-            Pricebook2Id = PricebookId);
+            Pricebook2Id = PricebookId,
+            Status = 'Draft');
         insert order;
         return order;
     }
