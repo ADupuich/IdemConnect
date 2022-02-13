@@ -39,7 +39,7 @@ private class OrderTriggerHandlerTest {
         System.assert(orderAddedBeforeDelete.size() == 1, 'TRIGGER AFTER DELETE : We do not find the correct number of order on the 2 orders account. There is '+orderAddedBeforeDelete.size()+' orders.');
     }
     @Istest
-    private static void orderTriggerHandlerBeforeUpdate() {
+    private static void orderTriggerHandlerBeforeUpdateTest() {
         Product2 testProduct = DataFactory.createProduct();
         //We choose the LIMIT equal to orders create in @TestSetup - 1 because we want that one order left with order but without product to check if the trigger stuck it
         List<Order> orderToAddItem = new List<Order>([SELECT Id, Pricebook2Id FROM Order LIMIT 2]);
